@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Kaitai-generated parsers (regenerate from lso.ksy)
+/reference/generated/
+*_kaitai.py
+
+# OS noise
+.DS_Store
+
+# Do NOT ignore corpus/*.LSO — the ground-truth samples are part of the spec.

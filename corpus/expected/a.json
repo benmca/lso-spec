@@ -1,0 +1,7 @@
+{
+  "file": "a.LSO",
+  "provenance": "Logic Platinum 5.5.1 (Windows XP, UTM/QEMU). One audio region (TEST.WAV) placed at bar 1.",
+  "tempo_bpm": 120.0,
+  "region_bar": 1,
+  "expected_position_ticks": 34560
+}

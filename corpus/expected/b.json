@@ -1,0 +1,7 @@
+{
+  "file": "b.LSO",
+  "provenance": "Logic Platinum 5.5.1 (Windows XP, UTM/QEMU). Same region moved to bar 9.",
+  "tempo_bpm": 120.0,
+  "region_bar": 9,
+  "expected_position_ticks": 65280
+}
