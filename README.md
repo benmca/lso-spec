@@ -36,15 +36,15 @@ kaitai-struct-compiler -t python lso.ksy
 # …or open lso.ksy in the Kaitai Web IDE to parse a file interactively.
 ```
 
-## Status (v0.1.0)
+## Status (v0.2.0)
 
 **KNOWN:** container/header, root-relative pointer scheme, text encodings, tempo, audio-file
-pool, channel-strip table, sentinels, and the **audio-region timeline position** (ticks,
-3840/bar, +34560 bias) — cracked by controlled ground truth and cross-validated against
-audio correlation.
+pool, channel-strip table, sentinels, the **audio-region timeline position** (ticks, 3840/bar,
++34560 bias), and the **region length** (sample frames @ `EVAW+0x70`) — both cracked by
+controlled ground truth; position also cross-validated against audio correlation.
 
-**Open:** region *length* (needs length-varying ground truth), the header pointer-directory
-walk, the `Sequence` object payload, and tightening the region→file link. See
+**Open:** associating each length/handle to its arrange placement (the region→file/length
+link), the header pointer-directory walk, and the `Sequence` object payload. See
 [`LSO_FORMAT_SPEC.md`](LSO_FORMAT_SPEC.md) §"Open items" and [`CHANGELOG.md`](CHANGELOG.md).
 
 ## License

@@ -96,10 +96,9 @@ types:
       beats_from_start:
         value: (pos_ticks - 34560) / 960.0
         doc: 'KNOWN. Quarter-note beats from bar 1 beat 1.'
-      # NOTE: file_handle and the region LENGTH are not modelled here yet --
-      # handle is read heuristically (u2 three bytes past the first 0x81 after pos);
-      # length is UNKNOWN (not present in this record -- needs length-varying ground
-      # truth). See reference/lsopos.py and LSO_FORMAT_SPEC.md sec. "Region length".
+      # NOTE: file_handle is read heuristically (u2 three bytes past the first 0x81
+      # after pos). Region LENGTH is NOT in this record -- it lives in the WAVE
+      # region-pool entry at EVAW+0x70 (see wave_pool_entry below).
 
   # ---- Audio-file pool entry (AUFL) --------------------------------------
   aufl_entry:
@@ -132,6 +131,39 @@ types:
       - id: body
         size: 0xcc
         doc: 'PARTIAL. 204-byte record; id @ +0x22, name @ +0x90 within this body.'
+
+  # ---- WAVE region/file pool entry (length lives here) -------------------
+  wave_pool_entry:
+    doc: |
+      KNOWN. A WAVE region/file pool record, found by the 'EVAW' (reversed 'WAVE')
+      tag. Holds the source audio metadata AND the region LENGTH (in sample frames).
+      region_length_seconds = length_frames / sample_rate.
+      Cracked by ground truth corpus/d,e,f.LSO (one region resized 2/3/5 bars ->
+      176400/264600/441000 frames @ 44100). Each placed region has its own entry;
+      a full-length entry per source file reads the whole file length.
+    seq:
+      - id: tag
+        contents: "EVAW"
+      - id: file_size_bytes
+        type: u4
+        doc: 'KNOWN. Source file size in bytes (matches the real .wav).'
+      - id: reserved
+        size: 4
+      - id: file_frames
+        type: u4
+        doc: 'KNOWN. Source file length in sample frames.'
+      - id: sample_rate
+        type: u4
+        doc: 'KNOWN. Hz (44100 in corpus).'
+      - id: channels
+        type: u2
+      - id: bits_per_sample
+        type: u2
+    instances:
+      length_frames:
+        pos: _io.pos + 0x70 - 0x18   # = tag + 0x70 (24 bytes consumed by seq above)
+        type: u4
+        doc: 'KNOWN. This entry''s length in frames (region length; == file when untrimmed).'
 
   end_marker:
     doc: 'KNOWN. 0x7FFFFFF1 (bytes f1 ff ff 7f) terminates object/event streams.'

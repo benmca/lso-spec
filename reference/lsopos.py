@@ -75,6 +75,33 @@ def regions(d):
     return out
 
 
+def wave_pool(d):
+    """Region/file pool entries from the 'EVAW' (reversed 'WAVE') format blocks.
+    Each entry (offsets relative to the EVAW tag):
+        +0x04 u32  source file size in bytes
+        +0x0c u32  source file length in sample FRAMES
+        +0x10 u32  sample rate (Hz)
+        +0x14 u16  channels   +0x16 u16  bits/sample
+        +0x70 u32  this entry's length in FRAMES  (region length; == file length if untrimmed)
+    Region length in seconds = frames@+0x70 / rate@+0x10.  (KNOWN: ground truth d/e/f.)"""
+    out = []
+    for m in re.finditer(b"EVAW", d):
+        o = m.start()
+        if o + 0x74 > len(d):
+            continue
+        rate = struct.unpack_from("<I", d, o + 0x10)[0] or 44100
+        frames = struct.unpack_from("<I", d, o + 0x70)[0] & 0xFFFFFF
+        out.append(dict(off=o,
+                        file_bytes=struct.unpack_from("<I", d, o + 4)[0],
+                        file_frames=struct.unpack_from("<I", d, o + 0x0c)[0],
+                        rate=rate,
+                        channels=struct.unpack_from("<H", d, o + 0x14)[0],
+                        bits=struct.unpack_from("<H", d, o + 0x16)[0],
+                        length_frames=frames,
+                        length_sec=frames / rate))
+    return out
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -83,9 +110,14 @@ def main():
     print(f"{sys.argv[1]}")
     print(f"  tempo = {tempo_bpm(d):.4f} BPM")
     regs = regions(d)
-    print(f"  {len(regs)} distinct audio regions:")
+    print(f"  {len(regs)} distinct audio regions (position):")
     for r in sorted(regs, key=lambda r: (r["file"], r["bar"])):
         print(f"    {r['file']:<34} bar {r['bar']:7.2f}  (ticks {r['ticks']})")
+    pool = wave_pool(d)
+    print(f"  {len(pool)} WAVE pool entries (length @ EVAW+0x70):")
+    for p in pool:
+        print(f"    @{p['off']:#08x} {p['rate']}Hz {p['channels']}ch/{p['bits']}b  "
+              f"len {p['length_frames']} frames = {p['length_sec']:.3f}s")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,10 @@
+{
+  "file": "f.LSO",
+  "provenance": "Logic Platinum 5.5.1 (Windows XP, UTM/QEMU). Same region at bar 1, resized to 5 bars.",
+  "tempo_bpm": 120.0,
+  "region_bar": 1,
+  "expected_position_ticks": 34560,
+  "region_length_bars": 5,
+  "expected_length_frames": 441000,
+  "sample_rate": 44100
+}

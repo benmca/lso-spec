@@ -3,6 +3,18 @@
 Each entry records what was promoted in confidence (KNOWN / PARTIAL / UNKNOWN) and the
 evidence behind it. For a reverse-engineered format the audit trail is the credibility.
 
+## 0.2.0 — 2026-06-10
+
+Promoted to **KNOWN**:
+- **Region length** — u32 in sample FRAMES at `EVAW+0x70` (WAVE region-pool entry);
+  `seconds = frames / sample_rate@(EVAW+0x10)`. Also pinned the EVAW header fields:
+  file bytes @+0x04, file frames @+0x0C, rate @+0x10, channels/bits @+0x14/+0x16.
+  *Evidence:* ground truth `corpus/d,e,f.LSO` — one region at bar 1 resized to 2/3/5 bars
+  reads 176400/264600/441000 frames @ 44100 (= exactly 2/3/5 bars at 120 BPM). Note: length
+  is in samples, while position (0.1.0) is in musical ticks.
+
+Corpus: added `d/e/f.LSO` + fixtures; `validate_corpus.py` now checks length too.
+
 ## 0.1.0 — 2026-06-09 (initial)
 
 Promoted to **KNOWN**:

@@ -117,13 +117,32 @@ bytes past the first `0x81` tag following the position. ~91% of regions resolve 
 handle and the cleanest clusters match audio correlation exactly; a minority disagree
 (likely similar/derived source audio). Reference: [`reference/lsopos.py`](reference/lsopos.py).
 
-### Region length — UNKNOWN
+### Region length — **KNOWN** ✅ (cracked 2026-06-10 by length-varying ground truth)
 
-Not present in the `0x24` arrange record (proven: the four contiguous 2-bar loop records in
-hiphop are byte-identical except position; no nearby field reads 7680 ticks). Cracking it
-needs **length-varying ground truth** (one region at a fixed bar, saved at lengths 2/4/6
-bars) — the same method as §7, varying length instead of position. Until then, consumers
-should treat clip length as full-file (or infer it from inter-region gaps).
+NOT in the `0x24` arrange record (that record holds only position). Length lives in the
+**WAVE region-pool entry**, tagged `EVAW` (reversed `WAVE`), and is stored in **sample
+FRAMES** — not ticks. (So Logic keeps region *position* musical/ticks but region *length*
+in audio samples.) Offsets relative to the `EVAW` tag at `T`:
+
+| field | location | conf | notes |
+|-------|----------|------|-------|
+| source file size (bytes) | `T+0x04` u32 | KNOWN | matches the real `.wav` byte size |
+| source file length (frames) | `T+0x0C` u32 | KNOWN | full file, in sample frames |
+| sample rate (Hz) | `T+0x10` u32 | KNOWN | 44100 in the corpus |
+| channels / bits | `T+0x14` u16 / `T+0x16` u16 | KNOWN | e.g. 1 / 16 |
+| **region length (frames)** | `T+0x70` u32 | **KNOWN** | this entry's length; `== file length` when untrimmed |
+
+`region_length_seconds = frames@(T+0x70) / rate@(T+0x10)`.
+
+*Evidence:* ground truth `corpus/d,e,f.LSO` — one region at bar 1 resized to 2 / 3 / 5 bars
+reads `176400 / 264600 / 441000` frames at `EVAW+0x70` (= 4.0 / 6.0 / 10.0 s at 44100 =
+exactly 2 / 3 / 5 bars at 120 BPM). Untrimmed entries read 705600 (the full 8-bar file).
+
+### Region → length association — PARTIAL
+
+Each placed region has its own `EVAW` entry (plus a full-length entry per source file, and
+undo-history duplicates). Matching a length to its arrange placement (by region name / parent
+file) is the same open association problem as the region→file link above.
 
 ## 8. Sentinels & invariants — KNOWN
 

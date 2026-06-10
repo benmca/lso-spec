@@ -1,0 +1,10 @@
+{
+  "file": "d.LSO",
+  "provenance": "Logic Platinum 5.5.1 (Windows XP, UTM/QEMU). One audio region (LEN8.WAV) at bar 1, resized to 2 bars.",
+  "tempo_bpm": 120.0,
+  "region_bar": 1,
+  "expected_position_ticks": 34560,
+  "region_length_bars": 2,
+  "expected_length_frames": 176400,
+  "sample_rate": 44100
+}
