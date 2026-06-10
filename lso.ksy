@@ -141,9 +141,10 @@ types:
       Cracked by ground truth corpus/d,e,f.LSO (one region resized 2/3/5 bars ->
       176400/264600/441000 frames @ 44100). Each placed region has its own entry;
       a full-length entry per source file reads the whole file length.
+    doc-ref: 'tag is EVAW (WAVE source) or FFIA (AIFF source); same layout.'
     seq:
       - id: tag
-        contents: "EVAW"
+        contents: "EVAW"   # also occurs as "FFIA" for AIFF sources (same fields)
       - id: file_size_bytes
         type: u4
         doc: 'KNOWN. Source file size in bytes (matches the real .wav).'

@@ -120,9 +120,10 @@ handle and the cleanest clusters match audio correlation exactly; a minority dis
 ### Region length — **KNOWN** ✅ (cracked 2026-06-10 by length-varying ground truth)
 
 NOT in the `0x24` arrange record (that record holds only position). Length lives in the
-**WAVE region-pool entry**, tagged `EVAW` (reversed `WAVE`), and is stored in **sample
-FRAMES** — not ticks. (So Logic keeps region *position* musical/ticks but region *length*
-in audio samples.) Offsets relative to the `EVAW` tag at `T`:
+**region-pool entry**, tagged `EVAW` (reversed `WAVE`) for WAV sources or `FFIA` (reversed
+`AIFF`) for AIFF sources — same field layout — and is stored in **sample FRAMES**, not ticks.
+(So Logic keeps region *position* musical/ticks but region *length* in audio samples.)
+Offsets relative to the tag at `T`:
 
 | field | location | conf | notes |
 |-------|----------|------|-------|
@@ -140,9 +141,12 @@ exactly 2 / 3 / 5 bars at 120 BPM). Untrimmed entries read 705600 (the full 8-ba
 
 ### Region → length association — PARTIAL
 
-Each placed region has its own `EVAW` entry (plus a full-length entry per source file, and
-undo-history duplicates). Matching a length to its arrange placement (by region name / parent
-file) is the same open association problem as the region→file link above.
+There is **one live pool entry per source FILE** (plus undo-history duplicates), and its
+embedded region name carries the source basename, so length → file matches cleanly by name.
+But a file placed multiple times (e.g. a looped clip) shares that one region length — the
+**per-placement** length of a trimmed/looped sub-clip is not stored in the pool entry. A
+practical consumer uses the pool region length capped by the gap to that file's next
+placement; exact per-placement length would need a multi-region trim ground truth.
 
 ## 8. Sentinels & invariants — KNOWN
 

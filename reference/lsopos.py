@@ -76,29 +76,50 @@ def regions(d):
 
 
 def wave_pool(d):
-    """Region/file pool entries from the 'EVAW' (reversed 'WAVE') format blocks.
-    Each entry (offsets relative to the EVAW tag):
-        +0x04 u32  source file size in bytes
+    """Region/file pool entries from the format blocks tagged 'EVAW' (reversed 'WAVE')
+    or 'FFIA' (reversed 'AIFF'). Each entry (offsets relative to the tag):
+        +0x04 u32  source file size in bytes        (WAVE)
         +0x0c u32  source file length in sample FRAMES
         +0x10 u32  sample rate (Hz)
         +0x14 u16  channels   +0x16 u16  bits/sample
         +0x70 u32  this entry's length in FRAMES  (region length; == file length if untrimmed)
-    Region length in seconds = frames@+0x70 / rate@+0x10.  (KNOWN: ground truth d/e/f.)"""
+    Region length in seconds = frames@+0x70 / rate@+0x10.  (KNOWN: ground truth d/e/f.)
+    The region's own name (embeds the source basename) follows the length field."""
     out = []
-    for m in re.finditer(b"EVAW", d):
+    for m in re.finditer(b"EVAW|FFIA", d):
         o = m.start()
         if o + 0x74 > len(d):
             continue
         rate = struct.unpack_from("<I", d, o + 0x10)[0] or 44100
         frames = struct.unpack_from("<I", d, o + 0x70)[0] & 0xFFFFFF
-        out.append(dict(off=o,
+        runs = re.findall(rb"[ -~]{2,}", d[o + 0x74:o + 0x74 + 0x40])
+        out.append(dict(off=o, fmt=d[o:o+4][::-1].decode("latin1"),
                         file_bytes=struct.unpack_from("<I", d, o + 4)[0],
                         file_frames=struct.unpack_from("<I", d, o + 0x0c)[0],
                         rate=rate,
                         channels=struct.unpack_from("<H", d, o + 0x14)[0],
                         bits=struct.unpack_from("<H", d, o + 0x16)[0],
                         length_frames=frames,
-                        length_sec=frames / rate))
+                        length_sec=frames / rate,
+                        name=runs[0].decode("latin1", "replace").strip() if runs else ""))
+    return out
+
+
+def region_length_sec_by_file(d):
+    """Map pooled filename (lower) -> region length in seconds, by matching each
+    pool entry's embedded region name to a filename stem. NOTE: there is ONE pool
+    entry per source FILE, not per arrange placement -- a file placed multiple times
+    (e.g. a looped clip) shares one region length; per-placement length is not stored
+    here (cap by the gap to the next placement for looped/sub-clip cases)."""
+    files = list(file_handles(d).values())
+    stems = {f.rsplit(".", 1)[0].lower(): f for f in files}
+    out = {}
+    for w in wave_pool(d):
+        nm = w["name"].lower()
+        hit = stems.get(nm.rsplit(".", 1)[0].lstrip()) or \
+              next((fn for st, fn in stems.items() if st and st in nm), None)
+        if hit and hit.lower() not in out:
+            out[hit.lower()] = w["length_sec"]
     return out
 
 

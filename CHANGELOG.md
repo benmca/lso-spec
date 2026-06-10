@@ -3,6 +3,15 @@
 Each entry records what was promoted in confidence (KNOWN / PARTIAL / UNKNOWN) and the
 evidence behind it. For a reverse-engineered format the audit trail is the credibility.
 
+## 0.2.1 — 2026-06-10
+
+- Region length also applies to AIFF sources via the `FFIA` tag (same `+0x70` layout) —
+  confirmed on real songs (e.g. `Adrift…aif`). `wave_pool()` now scans `EVAW|FFIA`.
+- Added `region_length_sec_by_file()` (length → file by matching the entry's embedded name)
+  and documented the **one-pool-entry-per-file** caveat: a file placed multiple times shares
+  one region length, so per-placement length of looped/sub-clips needs the gap-cap heuristic
+  (or future multi-region trim ground truth).
+
 ## 0.2.0 — 2026-06-10
 
 Promoted to **KNOWN**:
